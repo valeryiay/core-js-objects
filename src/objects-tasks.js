@@ -33,8 +33,14 @@ function shallowCopy(obj) {
  *    mergeObjects([{a: 1, b: 2}, {b: 3, c: 5}]) => {a: 1, b: 5, c: 5}
  *    mergeObjects([]) => {}
  */
-function mergeObjects(/* objects */) {
-  throw new Error('Not implemented');
+function mergeObjects(objects) {
+  const mergedObject = {};
+  objects.forEach((obj) => {
+    Object.entries(obj).forEach(([key, value]) => {
+      mergedObject[key] = (mergedObject[key] || 0) + value;
+    });
+  });
+  return mergedObject;
 }
 
 /**
@@ -50,8 +56,10 @@ function mergeObjects(/* objects */) {
  *    removeProperties({name: 'John', age: 30, city: 'New York'}, 'age') => {name: 'John', city: 'New York'}
  *
  */
-function removeProperties(/* obj, keys */) {
-  throw new Error('Not implemented');
+function removeProperties(obj, keys) {
+  const result = obj;
+  keys.forEach((key) => delete result[key]);
+  return obj;
 }
 
 /**
@@ -115,8 +123,14 @@ function makeImmutable(obj) {
  *    makeWord({ a: [0, 1], b: [2, 3], c: [4, 5] }) => 'aabbcc'
  *    makeWord({ H:[0], e: [1], l: [2, 3, 8], o: [4, 6], W:[5], r:[7], d:[9]}) => 'HelloWorld'
  */
-function makeWord(/* lettersObject */) {
-  throw new Error('Not implemented');
+function makeWord(lettersObject) {
+  const word = {};
+  Object.entries(lettersObject).forEach(([key, value]) => {
+    value.forEach((item) => {
+      word[item] = key;
+    });
+  });
+  return Object.values(word).join('');
 }
 
 /**
@@ -133,8 +147,17 @@ function makeWord(/* lettersObject */) {
  *    sellTickets([25, 25, 50]) => true
  *    sellTickets([25, 100]) => false (The seller does not have enough money to give change.)
  */
-function sellTickets(/* queue */) {
-  throw new Error('Not implemented');
+function sellTickets(queue) {
+  let boolean = true;
+  let number = 0;
+  queue.forEach((bill) => {
+    if (bill > 25 && bill - 25 > number) {
+      boolean = false;
+      return;
+    }
+    number += bill;
+  });
+  return boolean;
 }
 
 /**
@@ -214,8 +237,17 @@ function fromJSON(proto, json) {
  *      { country: 'Russia',  city: 'Saint Petersburg' }
  *    ]
  */
-function sortCitiesArray(/* arr */) {
-  throw new Error('Not implemented');
+function sortCitiesArray(arr) {
+  const result = arr.sort((a, b) => {
+    if (a.country > b.country) return 1;
+    if (a.country < b.country) return -1;
+    if (a.country === b.country) {
+      if (a.city > b.city) return 1;
+      if (a.city < b.city) return -1;
+    }
+    return 0;
+  });
+  return result;
 }
 
 /**
@@ -248,10 +280,19 @@ function sortCitiesArray(/* arr */) {
  *    "Poland" => ["Lodz"]
  *   }
  */
-function group(/* array, keySelector, valueSelector */) {
-  throw new Error('Not implemented');
+function group(array, keySelector, valueSelector) {
+  const resultMap = new Map();
+  array.forEach((item) => {
+    const key = keySelector(item);
+    const value = valueSelector(item);
+    if (!resultMap.has(key)) {
+      resultMap.set(key, [value]);
+    } else {
+      resultMap.get(key).push(value);
+    }
+  });
+  return resultMap;
 }
-
 /**
  * Css selectors builder
  *
@@ -305,34 +346,81 @@ function group(/* array, keySelector, valueSelector */) {
  *
  *  For more examples see unit tests.
  */
+class CssSelector {
+  constructor(tagName) {
+    this.tagName = tagName;
+    this.parts = new Set(); // Use Set to ensure unique elements
+  }
+
+  id(value) {
+    this.addPart(`#${value}`);
+    return this;
+  }
+
+  class(value) {
+    this.addPart(`.${value}`);
+    return this;
+  }
+
+  attr(value) {
+    this.addPart(`[${value}]`);
+    return this;
+  }
+
+  pseudoClass(value) {
+    this.addPart(`:${value}`);
+    return this;
+  }
+
+  pseudoElement(value) {
+    this.addPart(`::${value}`);
+    return this;
+  }
+
+  stringify() {
+    return this.tagName + [...this.parts].join('');
+  }
+
+  // New method to add parts with duplicate check
+  addPart(part) {
+    const error =
+      'Element, id and pseudo-element should not occur more then one time inside the selector';
+    if (this.parts.has(part)) {
+      throw error;
+    }
+    this.parts.add(part);
+  }
+}
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new CssSelector(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const selector = new CssSelector('');
+    selector.addPart(`#${value}`);
+    return selector;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new CssSelector('').addPart(`.${value}`);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new CssSelector('').addPart(`[${value}]`);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new CssSelector('').addPart(`:${value}`);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new CssSelector('').addPart(`::${value}`);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
   },
 };
 
